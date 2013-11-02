@@ -1,7 +1,8 @@
 #include "malloc537.h"
 #include "realloc537.h"
-#include <stdio.h>
-#include <stdint.h>
+#include "free537.h"
+#include "testcheck537.h"
+#include <string.h>
 #include "RedBlackTree/rangeTree.h"
 
 int main() {
@@ -11,7 +12,7 @@ int main() {
         printf("Found it!\n");
     } else {
         printf("Not Found\n");
-    }*/
+    }
     char *array = NULL;
     array = realloc537(array, 10);
     if (rangeQuery((int) array, 1) != NULL) {
@@ -19,6 +20,11 @@ int main() {
     } else {
         printf("Not Found again\n");
     }
-
+    free537(array);
+*/
+    char *buff = malloc537(8);
+    testcheck537(buff, 5);
+    // This is never happening.
+    testcheck537(buff, 12);
     return 0;
 }

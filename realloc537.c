@@ -10,7 +10,6 @@ void *realloc537(void *ptr, size_t size) {
         printf("Free\n");
         return NULL;
     } else if (ptr == NULL) {
-        printf("Malloc\n");
         return malloc537(size);
     }
     if (rangeQuery((int) ptr, 0) != NULL) {
