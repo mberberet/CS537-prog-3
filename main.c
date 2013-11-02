@@ -1,6 +1,7 @@
 #include "malloc537.h"
 #include "realloc537.h"
 #include <stdio.h>
+#include <stdint.h>
 #include "RedBlackTree/rangeTree.h"
 
 int main() {
