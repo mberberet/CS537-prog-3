@@ -46,7 +46,7 @@ static void redBlackFix(rangeTree *P, rangeTree *G, rangeTree *top, int newLeft,
 			printf("%d\n", topLeft);
 			switch(topLeft)
 			{
-				case 0: 
+				case 0:
 					top->right = G;
 					if(top->red)
 					{
@@ -94,7 +94,7 @@ static void redBlackFix(rangeTree *P, rangeTree *G, rangeTree *top, int newLeft,
 			G->left->red=0;
 			switch(topLeft)
 			{
-				case 0: 
+				case 0:
 					top->right = G;
 					if(top->red)
 					{
@@ -145,7 +145,7 @@ static void redBlackFix(rangeTree *P, rangeTree *G, rangeTree *top, int newLeft,
 				P->red = 0;
 				switch(topLeft)
 				{
-					case 0: 
+					case 0:
 						top->right = P;
 						break;
 					case 1:
@@ -163,7 +163,7 @@ static void redBlackFix(rangeTree *P, rangeTree *G, rangeTree *top, int newLeft,
 				P->right->red = 0;
 				switch(topLeft)
 				{
-					case 0: 
+					case 0:
 						top->right = P->right;
 						break;
 					case 1:
@@ -177,8 +177,8 @@ static void redBlackFix(rangeTree *P, rangeTree *G, rangeTree *top, int newLeft,
 				G->left = NULL;
 				G->red = 1;
 			}
-				
-				
+
+
 		}
 		/*P's sibling is black (or NULL) and P is left child*/
 		else if(left==0 && (!G->left || !G->left->red))
@@ -191,7 +191,7 @@ static void redBlackFix(rangeTree *P, rangeTree *G, rangeTree *top, int newLeft,
 				P->red = 0;
 				switch(topLeft)
 				{
-					case 0: 
+					case 0:
 						top->right = P;
 						break;
 					case 1:
@@ -209,7 +209,7 @@ static void redBlackFix(rangeTree *P, rangeTree *G, rangeTree *top, int newLeft,
 				P->left->red = 0;
 				switch(topLeft)
 				{
-					case 0: 
+					case 0:
 						top->right = P->left;
 						break;
 					case 1:
@@ -242,7 +242,7 @@ void addRange(int address, int length)
 	topLeft=2;
 	left=2;
 	newLeft=2;
-	
+
 	/*tree is empty*/
 	if(!head)
 	{
@@ -251,11 +251,11 @@ void addRange(int address, int length)
 		{
 			printf("Failed to allocate memory for the dynamic memory range tree");
 			exit(1);
-		}	
+		}
 		head->addr = address;
 		head->len = length;
 		/*First node will be black */
-		head->red = 0; 
+		head->red = 0;
 		return;
 	}
 	while(1)
@@ -270,7 +270,7 @@ void addRange(int address, int length)
 				tmp = tmp->right;
 				topLeft=left;
 				left=0;
-				
+
 			}
 			else
 			{
@@ -279,7 +279,7 @@ void addRange(int address, int length)
 				{
 					printf("Failed to allocate memory for the dynamic memory range tree");
 					exit(1);
-				}		
+				}
 				tmp->right->addr = address;
 				tmp->right->len = length;
 				tmp->right->red = 1;
@@ -305,7 +305,7 @@ void addRange(int address, int length)
 				{
 					printf("Failed to allocate memory for the dynamic memory range tree");
 					exit(1);
-				}	
+				}
 				tmp->left->addr = address;
 				tmp->left->len = length;
 				tmp->left->red = 1;
@@ -322,7 +322,7 @@ void addRange(int address, int length)
 	redBlackFix(tmp, tmpParent, top, newLeft, left, topLeft);
 
 }
-/*If range is covered in tree, return the node it is covered by. 
+/*If range is covered in tree, return the node it is covered by.
   If range is partially covered, exit with error code,
   If range is not at all covered, return NULL
 */
@@ -351,7 +351,7 @@ rangeTree *rangeQuery(int address, int length)
 	}
 	else
 	{
-		if(address >= tmp->addr && address+length-1 < tmp->addr + tmp->len) 
+		if(address >= tmp->addr && address+length-1 < tmp->addr + tmp->len)
 		{
 			return tmp;
 		}
@@ -380,7 +380,7 @@ void removeRange(int address, int length)
 	/* split into two nodes*/
 	/*  remove node and follow red black tree algorithm*/
 
-			
+
 	}
 	else
 	{
@@ -516,21 +516,21 @@ void printRangeTree()
 			{
 				break;
 			}
-			
+
 			t = nxtSize;
 			nxtSize = curSize;
 			curSize = t;
 			t = nxtIndex;
 			nxtIndex = curIndex;
 			curIndex = t;
-						
+
 			tmp = curLevelQ;
 			curLevelQ = nextLevelQ;
 			nextLevelQ = tmp;
-			/*free(tmp);*/	
+			/*free(tmp);*/
 		}
-		
-		
+
+
 	}
 	printf("\n");
 }
