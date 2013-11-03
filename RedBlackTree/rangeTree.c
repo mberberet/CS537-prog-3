@@ -42,7 +42,6 @@ static void rebalance(rangeTree *P, rangeTree *G, rangeTree *top, int newLeft, i
 			P->black=1;
 			G->black=0;
 			G->children[!left]->black=1;
-			printf("%d\n", topLeft);
 			if(topLeft<2)
 			{
 				top->children[topLeft] = G;
@@ -503,7 +502,6 @@ void printRangeTree()
 		curIndex--;
 		if(n)
 		{
-			printf("0x%X,%d,%d ", n->addr, n->len, n->black);
 			nextLevelQ[nxtIndex] = n->LEFT;
 			nxtIndex++;
 			if(nxtIndex==nxtSize)
@@ -531,7 +529,6 @@ void printRangeTree()
 		}
 		else
 		{
-			printf("X");
 			nextLevelQ[nxtIndex] = NULL;
 			nxtIndex++;
 			if(nxtIndex==nxtSize)
