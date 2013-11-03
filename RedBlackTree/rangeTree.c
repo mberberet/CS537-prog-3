@@ -2,227 +2,108 @@
 #include <stdio.h>
 #include "rangeTree.h"
 
+#define RIGHT children[0]
+#define LEFT children[1]
+
 static rangeTree *head;
 
-static int isLeaf(rangeTree* x)
-{
-	return !(x->left || x->right);
-}
 
 static rangeTree* getParent(rangeTree *child)
 {
 	rangeTree *tmp;
 	tmp = head;
-	if(tmp ==child)
+	if(!child || head == child )
 	{
 		return NULL;
 	}
-	while(child && tmp && tmp->right != child && tmp->left != child)
+	while(tmp && tmp->RIGHT != child && tmp->LEFT != child)
 	{
 		if(child->addr > tmp->addr + tmp->len -1)
 		{
 			/*Go right*/
-			tmp=tmp->right;
+			tmp=tmp->RIGHT;
 		}
 		else if (child->addr + child->len-1 < tmp->addr)
 		{
 			/*Go left*/
-			tmp = tmp->left;
+			tmp = tmp->LEFT;
 		}
 	}
 	return tmp;
 }
 
-static void redBlackFix(rangeTree *P, rangeTree *G, rangeTree *top, int newLeft, int left, int topLeft)
+static void rebalance(rangeTree *P, rangeTree *G, rangeTree *top, int newLeft, int left, int topLeft)
 {
-	if(P->red)
+	if(!P->black && left<2)
 	{
-		/*P's sibling is red and P is a left child*/
-		if(left==1 && G->right && G->right->red)
+		/*P's sibling is red */
+		if(G->children[!left] && !G->children[!left]->black)
 		{
-			P->red=0;
-			G->red = 1;
-			G->right->red=0;
+			P->black=1;
+			G->black=0;
+			G->children[!left]->black=1;
 			printf("%d\n", topLeft);
-			switch(topLeft)
+			if(topLeft<2)
 			{
-				case 0: 
-					top->right = G;
-					if(top->red)
-					{
-						rangeTree *x = getParent(top);
-						rangeTree *y = getParent(x);
-						if(y)
-						{
-							left =(y->left == x) ? 1 :0;
-						}
-						else
-						{
-							left = 2;
-						}
-						redBlackFix(top, x, y, topLeft, ((x->left == top) ? 1 : 0), left);
-					}
-					break;
-				case 1:
-					top->left = G;
-					if(top->red)
-					{
-						rangeTree *x = getParent(top);
-						rangeTree *y = getParent(x);
-						if(y)
-						{
-							left =(y->left == x) ? 1 :0;
-						}
-						else
-						{
-							left = 2;
-						}
-						redBlackFix(top, x, y, topLeft, ((x->left == top) ? 1 : 0), left);
-					}
-					break;
-				case 2:
-					head = G;
-					head->red=0;
-					break;
-			}
-		}
-		/*P's sibling is red and P is a right child*/
-		else if(left==0 && G->left && G->left->red)
-		{
-			P->red=0;
-			G->red = 1;
-			G->left->red=0;
-			switch(topLeft)
-			{
-				case 0: 
-					top->right = G;
-					if(top->red)
-					{
-						rangeTree *x = getParent(top);
-						rangeTree *y = getParent(x);
-						if(y)
-						{
-							left =(y->left == x) ? 1 :0;
-						}
-						else
-						{
-							left = 2;
-						}
-						redBlackFix(top, x, y, topLeft, ((x->left == top) ? 1 : 0), left);
-					}
-					break;
-				case 1:
-					top->left = G;
-					if(top->red)
-					{
-						rangeTree *x = getParent(top);
-						rangeTree *y = getParent(x);
-						if(y)
-						{
-							left =(y->left == x) ? 1 :0;
-						}
-						else
-						{
-							left = 2;
-						}
-						redBlackFix(top, x, y, topLeft, ((x->left == top) ? 1 : 0), left);
-					}
-					break;
-				case 2:
-					head = G;
-					head->red=0;
-					break;
-			}
-		}
-		/*P's sibling is black (or NULL) and P is left child*/
-		else if(left==1 && (!G->right || !G->right->red))
-		{
-			if(newLeft)
-			{
-				G->left = P->right;
-				G->red = 1;
-				P->right = G;
-				P->red = 0;
-				switch(topLeft)
+				top->children[topLeft] = G;
+				if(!top->black)
 				{
-					case 0: 
-						top->right = P;
-						break;
-					case 1:
-						top->left = P;
-						break;
-					case 2:
-						head = P;
-						break;
+					rangeTree *x = getParent(top);
+					rangeTree *y = getParent(x);
+					if(y)
+					{
+						left =(y->LEFT == x) ? 1 :0;
+					}
+					else
+					{
+						left = 2;
+					}
+					rebalance(top, x, y, topLeft, ((x->LEFT == top) ? 1 : 0), left);
 				}
 			}
 			else
 			{
-				P->right->left = P;
-				P->right->right = G;
-				P->right->red = 0;
-				switch(topLeft)
-				{
-					case 0: 
-						top->right = P->right;
-						break;
-					case 1:
-						top->left = P->right;
-						break;
-					case 2:
-						head = P->right;
-						break;
-				}
-				P->right = NULL;
-				G->left = NULL;
-				G->red = 1;
+				head = G;
+				head->black=1;
 			}
-				
-				
 		}
-		/*P's sibling is black (or NULL) and P is left child*/
-		else if(left==0 && (!G->left || !G->left->red))
+		/*P's sibling is black (or NULL) */
+		else if(!G->children[!left] || G->children[!left]->black)
 		{
-			if(!newLeft)
+			if(newLeft == left)
 			{
-				G->right = P->left;
-				G->red = 1;
-				P->left = G;
-				P->red = 0;
-				switch(topLeft)
+				G->children[left] = P->children[!left];
+				G->black=0;
+				P->children[!left] = G;
+				P->black=1;
+				if(topLeft<2)
 				{
-					case 0: 
-						top->right = P;
-						break;
-					case 1:
-						top->left = P;
-						break;
-					case 2:
-						head = P;
-						break;
+					top->children[topLeft] = P;
+				}
+				else
+				{
+					head = P;
 				}
 			}
 			else
 			{
-				P->left->right = P;
-				P->left->left = G;
-				P->left->red = 0;
-				switch(topLeft)
+				P->children[!left]->children[left] = P;
+				P->children[!left]->children[!left] = G;
+				P->children[!left]->black=1;
+				if(topLeft<2)
 				{
-					case 0: 
-						top->right = P->left;
-						break;
-					case 1:
-						top->left = P->left;
-						break;
-					case 2:
-						head = P->left;
-						break;
+					top->children[topLeft] = P->children[!left];
 				}
-				P->left = NULL;
-				G->right = NULL;
-				G->red = 1;
+				else
+				{
+					head = P->children[!left];
+				}
+				P->children[!left] = NULL;
+				G->children[left] = NULL;
+				G->black=0;
 			}
+				
+				
 		}
 		/*else P is head pointer, so do nothing*/
 	}
@@ -255,78 +136,58 @@ void addRange(int address, int length)
 		head->addr = address;
 		head->len = length;
 		/*First node will be black */
-		head->red = 0; 
+		head->black=1; 
 		return;
 	}
 	while(1)
 	{
+		int x;
 		if(address > tmp->addr + tmp->len -1)
 		{
-			/*Go right*/
-			if(tmp->right)
-			{
-				top = tmpParent;
-				tmpParent=tmp;
-				tmp = tmp->right;
-				topLeft=left;
-				left=0;
-				
-			}
-			else
-			{
-				tmp->right = (rangeTree *) malloc(sizeof(rangeTree));
-				if(!tmp->right)
-				{
-					printf("Failed to allocate memory for the dynamic memory range tree");
-					exit(1);
-				}		
-				tmp->right->addr = address;
-				tmp->right->len = length;
-				tmp->right->red = 1;
-				newLeft=0;
-				break;
-			}
+			x = 0;
 		}
 		else if (address + length-1 < tmp->addr)
 		{
-			/*Go left*/
-			if(tmp->right)
-			{
-				top = tmpParent;
-				tmpParent=tmp;
-				tmp = tmp->left;
-				topLeft=left;
-				left=1;
-			}
-			else
-			{
-				tmp->left = (rangeTree *) malloc(sizeof(rangeTree));
-				if(!tmp->left)
-				{
-					printf("Failed to allocate memory for the dynamic memory range tree");
-					exit(1);
-				}	
-				tmp->left->addr = address;
-				tmp->left->len = length;
-				tmp->left->red = 1;
-				newLeft=1;
-				break;
-			}
+			x = 1;
 		}
 		else
 		{
 			printf("Address are ready allocated.");
 			exit(2);
 		}
+			/*Go right*/
+		if(tmp->children[x])
+		{
+			top = tmpParent;
+			tmpParent=tmp;
+			tmp = tmp->children[x];
+			topLeft=left;
+			left=x;
+			
+		}
+		else
+		{
+			tmp->children[x] = (rangeTree *) malloc(sizeof(rangeTree));
+			if(!tmp->children[x])
+			{
+				printf("Failed to allocate memory for the dynamic memory range tree");
+				exit(1);
+			}		
+			tmp->children[x]->addr = address;
+			tmp->children[x]->len = length;
+			tmp->children[x]->black=0;
+			newLeft=x;
+			break;
+		}
 	}
-	redBlackFix(tmp, tmpParent, top, newLeft, left, topLeft);
+	rebalance(tmp, tmpParent, top, newLeft, left, topLeft);
 
 }
 /*If range is covered in tree, return the node it is covered by. 
   If range is partially covered, exit with error code,
   If range is not at all covered, return NULL
 */
-rangeTree *rangeQuery(int address, int length)
+static rangeTree* getRangeNode(int address, int length)
 {
 	rangeTree *tmp;
 	tmp = head;
@@ -334,11 +195,11 @@ rangeTree *rangeQuery(int address, int length)
 	{
 		if(address > tmp->addr + tmp->len-1)
 		{
-			tmp= tmp->right;
+			tmp= tmp->RIGHT;
 		}
 		else if (address + length-1 < tmp->addr)
 		{
-			tmp = tmp->left;
+			tmp = tmp->LEFT;
 		}
 		else
 		{
@@ -357,34 +218,235 @@ rangeTree *rangeQuery(int address, int length)
 		}
 		else
 		{
-			printf("Memory is partially allocated for queried block:\nAddress: 0x%X\nLength: %d\n", address, length);
-			printf("Free or malloc of this block will cause a seg fault\n");
-			exit(2);
+			head->black=2;
+			return tmp;
 		}
 	}
 	return head;
 }
+
+int rangeQuery(int address, int length)
+{
+	rangeTree *x = getRangeNode(address, length);
+	if(x && head->black==2)
+	{
+		head->black=1;
+		return 2;
+	}
+	else 
+	{
+		return (x != NULL);
+	}
+}
+
+static void fixDoubleBlack(int left, rangeTree* parent, rangeTree *root)
+{
+	int topLeft = root ? (root->LEFT == parent) : 2;
+	if(left<2)
+	{	/*red sibling*/
+		if(parent->children[!left] && !parent->children[!left]->black)
+		{
+			if(topLeft<2)
+			{
+				root->children[topLeft] = parent->RIGHT;
+				parent->children[!left] = parent->children[!left]->children[left];
+				root->children[topLeft]->children[left] = parent;
+				parent->black=0;
+				if(root->children[topLeft])
+					root->children[topLeft]->black=1;
+				fixDoubleBlack(left, parent, root->children[topLeft]);
+			}
+			else
+			{
+				head = parent->children[!left];
+				parent->children[!left] = parent->children[!left]->children[left];
+				head->children[left] = parent;
+				parent->black=0;
+				head->black=1;
+				fixDoubleBlack(left, parent, head);
+			}
+		}
+		else
+		{
+			/*black sibling with red child on same side*/			
+			if(parent->children[!left]->children[left] && !parent->children[!left]->children[left]->black)
+			{
+				if(topLeft<2)
+				{
+					root->children[topLeft] = parent->children[!left];
+					parent->children[!left] = root->children[topLeft]->children[!left];
+					root->children[topLeft]->children[left] = parent;
+					if(root->children[topLeft]->children[!left])
+						root->children[topLeft]->children[!left]->black=1;
+					if(parent->children[left])
+						parent->children[left]->black=1;
+				}
+				else
+				{
+					head = parent->children[!left];
+					parent->children[!left] = head->children[!left];
+					head->children[left] = parent;
+					if(head->children[!left])
+						head->children[!left]->black=1;
+					if(parent->children[left])
+						parent->children[left]->black=1;
+				}
+			}
+			/*black sibling with red child on other side*/
+			else if(parent->children[!left]->children[left] && !parent->children[!left]->children[left]->black)
+			{
+				if(topLeft<2)
+				{
+					root->children[topLeft] = parent->children[!left]->children[left];
+					parent->children[!left]->children[left] = root->children[topLeft]->children[!left];
+					root->children[topLeft]->children[!left] = parent->children[!left];
+					parent->children[!left] = root->children[topLeft]->children[left];
+					root->children[topLeft]->children[left] = parent;
+					if(root->children[topLeft])
+						root->children[topLeft]->black=1;
+					if(parent->children[left])
+						parent->children[left]->black=1;
+				}
+				else
+				{
+					head = parent->children[!left]->children[left];
+					parent->children[!left]->children[left] = head->children[!left];
+					head->children[!left] = parent->children[!left];
+					parent->children[!left] = head->children[left];
+					head->children[left] = parent;
+					head->black=1;
+					if(parent->children[left])
+						parent->children[left]->black=1;
+				}
+			}
+			/*black sibling with black children*/
+			else
+			{
+				parent->black++;
+				parent->children[!left]->black--;
+				if(parent->black==2)
+				{
+					rangeTree *y = getParent(parent);
+					if(!y)
+					{
+						parent->black=1;
+						return;
+					}
+					left = y->LEFT == parent;
+					parent->black=1;
+					fixDoubleBlack(left, y, getParent(y));
+				}
+			}
+		}
+	}
+	else
+	{
+		printf("Double black node is top of tree. Something went wrong");
+		exit(2);
+	}
+}
+
 void removeRange(int address, int length)
 {
-	/*THIS MIGHT BE ROUGH*/
 	rangeTree* x;
 	rangeTree* tmp;
 	rangeTree* parent;
 	int left;
-	x = rangeQuery(address, length);
-	parent = getParent(x);
+	int deletedColor;
+	x = getRangeNode(address, length);
 	if(x)
 	{
 	/*reduce length*/
-	/*change start address*/
-	/* split into two nodes*/
-	/*  remove node and follow red black tree algorithm*/
-
+		if(x->addr == address && length < x->len)
+		{
+			x->len = length;
+			return;
+		}
+		/*change start address*/
+		if(x->addr < address && address + length == x->addr + x->len)
+		{
+			x->addr = address;
+			x->len-=length;
+			return;
+		}
+		/*split into two nodes*/
+		if(x->addr < address && address + length != x->addr + x->len)
+		{
+			int tmp;
+			tmp = x->len;
+			x->len = address - x->addr;
+			addRange(address+length-1, tmp - x->len - length); 
+			return;
+		}
+	
+		/*remove node and follow red black tree algorithm*/
+		/*If node has less than 2 children*/
+		if(!x->LEFT || !x->RIGHT)
+		{			
+			parent = getParent(x);
+			left = (parent && parent->LEFT == x);
+			/*replace node with child (null or otherwise)*/
+			if(parent)
+			{
+				parent->children[left] = (x->LEFT) ? x->LEFT : x->RIGHT;
+				tmp = parent->children[left];
+				deletedColor = x->black;
+				free(x);
+			}
+			/*At most two nodes in tree and removing head node*/
+			else
+			{
+				head = (x->LEFT) ? x->LEFT : x->RIGHT;
+				head->black=1;
+				free(x);
+				return;
+			}
+		}
+		else
+		{
+			/*switch node with in order successor(and switch colors as well)*/
+			tmp = x;
+			x = x->LEFT;
+			while(x->RIGHT)
+			{
+				x = x->RIGHT;
+			}
+			parent = getParent(x);
+			tmp->addr = x->addr;
+			tmp->len = x->len;
+			left = (parent && parent->LEFT == x);
 			
+			/*replace node with child*/
+			if(parent)
+			{
+				parent->children[left] = (x->LEFT) ? x->LEFT : x->RIGHT;
+				tmp = parent->children[left];
+				deletedColor = x->black;
+				free(x);
+			}
+			/*Should never happen*/
+			else
+			{
+				printf("Something went wrong");
+				return;
+			}		
+		}
+		/*If node deleted was red*/
+		if(!deletedColor)
+		{
+			/*color black*/
+			if(tmp)
+				tmp->black=1;
+		}
+		else
+		{
+			/*double black...*/
+			fixDoubleBlack(left, parent, getParent(parent));
+		}
 	}
 	else
 	{
-		printf("Memory is not allocated. Will not free.");
+		printf("Memory is not allocated. Do not free.");
 	}
 }
 
@@ -396,7 +458,7 @@ static int dynamicMemoryBytesNode(rangeTree* x)
 	}
 	else
 	{
-		return dynamicMemoryBytesNode(x->left) + dynamicMemoryBytesNode(x->right) + x->len;
+		return dynamicMemoryBytesNode(x->LEFT) + dynamicMemoryBytesNode(x->RIGHT) + x->len;
 	}
 }
 
@@ -441,8 +503,8 @@ void printRangeTree()
 		curIndex--;
 		if(n)
 		{
-			printf("0x%X,%d,%d ", n->addr, n->len, n->red);
-			nextLevelQ[nxtIndex] = n->left;
+			printf("0x%X,%d,%d ", n->addr, n->len, n->black);
+			nextLevelQ[nxtIndex] = n->LEFT;
 			nxtIndex++;
 			if(nxtIndex==nxtSize)
 			{
@@ -454,7 +516,7 @@ void printRangeTree()
 					exit(1);
 				}
 			}
-			nextLevelQ[nxtIndex] = n->right;
+			nextLevelQ[nxtIndex] = n->RIGHT;
 			nxtIndex++;
 			if(nxtIndex==nxtSize)
 			{
@@ -471,7 +533,6 @@ void printRangeTree()
 		{
 			printf("X");
 			nextLevelQ[nxtIndex] = NULL;
-			/*if(n->left){printf("Added left: 0x%X", n->left->addr);}*/
 			nxtIndex++;
 			if(nxtIndex==nxtSize)
 			{
@@ -484,7 +545,6 @@ void printRangeTree()
 				}
 			}
 			nextLevelQ[nxtIndex] = NULL;
-			/*if(n->right){printf("Added right: 0x%X", n->right->addr);}*/
 			nxtIndex++;
 			if(nxtIndex==nxtSize)
 			{
@@ -532,5 +592,7 @@ void printRangeTree()
 		
 		
 	}
+	free(curLevelQ);
+	free(nextLevelQ);
 	printf("\n");
 }

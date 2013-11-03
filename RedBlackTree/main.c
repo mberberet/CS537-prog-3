@@ -7,7 +7,7 @@
 int main(int argc, char **argv)
 {
 	int i;
-	rangeTree* y;
+	int y;
 	i=0;
 	while(i<atoi(argv[1]))
 	{
@@ -17,20 +17,16 @@ int main(int argc, char **argv)
 		{
 			break;
 		}
-		addRange(i*400, 350);
-		y = rangeQuery(i*400, 200);
-		if(y)
-		{
-			printf("Found in tree:%d\n", i*400);
-		}
-		else
-		{
-			printf("Not found in tree:%d\n", i*400);
-		}
-		printf("%d\n", dynamicMemoryBytes());
+		addRange(i*400, 200);
+		y = rangeQuery(i*400+5, 200);
+		printf("%d\n", y);
 		i++;
 	}
-	y = rangeQuery(3200, 500);
+	printRangeTree();
+	printf("Attempting to remove 0x%X\n", 0xAF0);
+	printf("%d\n", dynamicMemoryBytes());
+	removeRange(0xAF0, 200);
+	printf("%d\n", dynamicMemoryBytes());
 	printRangeTree();
 	return 0;
 }
