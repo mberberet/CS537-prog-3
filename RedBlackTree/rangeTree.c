@@ -182,8 +182,9 @@ void addRange(int address, int length)
 	rebalance(tmp, tmpParent, top, newLeft, left, topLeft);
 
 }
+
 /*If range is covered in tree, return the node it is covered by. 
-  If range is partially covered, exit with error code,
+  If range is partially covered, change head's color to double black
   If range is not at all covered, return NULL
 */
 static rangeTree* getRangeNode(int address, int length)
@@ -211,13 +212,13 @@ static rangeTree* getRangeNode(int address, int length)
 	}
 	else
 	{
-		if(address >= tmp->addr && address+length-1 < tmp->addr + tmp->len) 
+		if(address >= tmp->addr && address+length-1 <= tmp->addr + tmp->len-1) 
 		{
 			return tmp;
 		}
 		else
 		{
-			head->black=2;
+			head->black = 2;
 			return tmp;
 		}
 	}
@@ -358,13 +359,14 @@ void removeRange(int address, int length)
 	/*reduce length*/
 		if(x->addr == address && length < x->len)
 		{
-			x->len = length;
+			x->addr+=length;
+			x->len-= length;
 			return;
 		}
 		/*change start address*/
 		if(x->addr < address && address + length == x->addr + x->len)
 		{
-			x->addr = address;
+			x->addr=address;
 			x->len-=length;
 			return;
 		}
@@ -502,6 +504,7 @@ void printRangeTree()
 		curIndex--;
 		if(n)
 		{
+			printf("%X,%d,%d ", n->addr, n->len, n->black);
 			nextLevelQ[nxtIndex] = n->LEFT;
 			nxtIndex++;
 			if(nxtIndex==nxtSize)
@@ -529,6 +532,7 @@ void printRangeTree()
 		}
 		else
 		{
+			printf("X");
 			nextLevelQ[nxtIndex] = NULL;
 			nxtIndex++;
 			if(nxtIndex==nxtSize)
@@ -584,7 +588,6 @@ void printRangeTree()
 			tmp = curLevelQ;
 			curLevelQ = nextLevelQ;
 			nextLevelQ = tmp;
-			/*free(tmp);*/	
 		}
 		
 		

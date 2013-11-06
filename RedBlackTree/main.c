@@ -18,14 +18,14 @@ int main(int argc, char **argv)
 			break;
 		}
 		addRange(i*400, 200);
-		y = rangeQuery(i*400+5, 200);
+		y = rangeQuery(i*400, 200);
 		printf("%d\n", y);
 		i++;
 	}
 	printRangeTree();
 	printf("Attempting to remove 0x%X\n", 0xAF0);
 	printf("%d\n", dynamicMemoryBytes());
-	removeRange(0xAF0, 200);
+	removeRange(0x4BA, 150);
 	printf("%d\n", dynamicMemoryBytes());
 	printRangeTree();
 	return 0;
