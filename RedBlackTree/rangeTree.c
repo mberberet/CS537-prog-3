@@ -274,7 +274,7 @@ static void fixDoubleBlack(int left, rangeTree* parent, rangeTree *root)
 				if(topLeft<2)
 				{
 					root->children[topLeft] = parent->children[!left];
-					parent->children[!left] = root->children[topLeft]->children[!left];
+					parent->children[!left] = root->children[topLeft]->children[left];
 					root->children[topLeft]->children[left] = parent;
 					if(root->children[topLeft]->children[!left])
 						root->children[topLeft]->children[!left]->black=1;
@@ -284,7 +284,7 @@ static void fixDoubleBlack(int left, rangeTree* parent, rangeTree *root)
 				else
 				{
 					head = parent->children[!left];
-					parent->children[!left] = head->children[!left];
+					parent->children[!left] = head->children[left];
 					head->children[left] = parent;
 					if(head->children[!left])
 						head->children[!left]->black=1;
@@ -354,6 +354,12 @@ void removeRange(int address, int length)
 	int left;
 	int deletedColor;
 	x = getRangeNode(address, length);
+	if(head->black==2)
+	{
+		head->black=1;
+		printf("Range is partially covered in the tree, don't remove"); 
+		return;
+	}
 	if(x)
 	{
 	/*reduce length*/
@@ -380,6 +386,13 @@ void removeRange(int address, int length)
 			return;
 		}
 	
+		if(x->addr == head->addr && !x->LEFT && !x->RIGHT)
+		{
+			printf("Hello");
+			head = NULL;
+			free(head);
+			return;
+		}
 		/*remove node and follow red black tree algorithm*/
 		/*If node has less than 2 children*/
 		if(!x->LEFT || !x->RIGHT)
