@@ -1,16 +1,29 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include "RedBlackTree/rangeTree.h"
+#include "rangeTree.h"
 
 void free537(void *ptr) {
-    if (rangeQuery((int) ptr, 1) == NULL) {
-        printf("Unable to free memory!\n");
-        exit(-1);
+    int error;
+    error = freeRange(ptr);
+    switch (error) {
+        case -1:
+            printf("Attempting to free memory that was never allocated.\n");
+            exit(-1);
+            break;
+        case -2:
+            printf("Attempting to free memory that is not the first byte of its range.\n");
+            exit(-1);
+            break;
+        case -3:
+            printf("Attempting to free previously freed memory.\n");
+            exit(-1);
+            break;
+        case -4:
+            printf("Attempting to either free previously freed memory or free memory that is not the first byte of its range.\n");
+            exit(-1);
+            break;
     }
-    // Do a check to see if the memory was already freed and report/exit if so.
-
     // Free the actual memory
     free(ptr);
     printf("Freed\n");
-    // Remove ptr from range tree into already freed tree (or some other structure).
 }

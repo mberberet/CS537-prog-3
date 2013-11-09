@@ -1,26 +1,30 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include "RedBlackTree/rangeTree.h"
+#include "rangeTree.h"
 #include "malloc537.h"
+#include "free537.h"
 
 void *realloc537(void *ptr, size_t size) {
     void *address = NULL;
-    if (size == 0 && ptr == NULL) {
-        // TODO Free Operation
+
+    if (size == 0 && ptr != NULL) {
+        free537(ptr);
         printf("Free\n");
         return NULL;
     } else if (ptr == NULL) {
         return malloc537(size);
     }
-    if (rangeQuery((int) ptr, 0) != NULL) {
-        // TODO Remove tuple
+    if (rangeQuery(ptr, 1) == 1) {
+        free537(ptr);
         printf("Existed. Freed.\n");
     }
-    if ((address = realloc(ptr, size)) == NULL) {
+    if ((address = realloc(ptr, size)) == NULL && size > 0) {
         printf("Unable to allocate memory!\n");
         exit(-1);
     }
-    addRange((int) address, size);
+    if (size > 0) {
+        addRange(address, size);
+    }
     return address;
 
 }

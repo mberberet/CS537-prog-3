@@ -8,7 +8,7 @@
 
 static rangeTree *head;
 
-	
+
 static rangeTree *getRangeNode(uintptr_t address, int length)
 {
 	if(length<=0)
@@ -21,7 +21,7 @@ static rangeTree *getRangeNode(uintptr_t address, int length)
 	{
 		if(address == tmp->addr && address != tmp->start)
 		{
-			
+
 		}
 		if(address > tmp->start + tmp->len-1)
 		{
@@ -42,7 +42,7 @@ static rangeTree *getRangeNode(uintptr_t address, int length)
 	}
 	else
 	{
-		if(address >= tmp->start && address+length-1 <= tmp->start + tmp->len-1) 
+		if(address >= tmp->start && address+length-1 <= tmp->start + tmp->len-1)
 		{
 			return tmp;
 		}
@@ -121,7 +121,7 @@ static void fixDoubleBlack(int left, rangeTree* parent, rangeTree *root)
 		}
 		else
 		{
-			/*black sibling with red child on same side*/			
+			/*black sibling with red child on same side*/
 			if(parent->children[!left]->children[left] && !parent->children[!left]->children[left]->black)
 			{
 				if(topLeft<2)
@@ -206,7 +206,7 @@ void removeRange(rangeTree *x)
 	int left;
 	int deletedColor;
 	if(x)
-	{	
+	{
 		if(x->addr == head->addr && !x->LEFT && !x->RIGHT)
 		{
 			head = NULL;
@@ -216,7 +216,7 @@ void removeRange(rangeTree *x)
 		/*remove node and follow red black tree algorithm*/
 		/*If node has less than 2 children*/
 		if(!x->LEFT || !x->RIGHT)
-		{			
+		{
 			parent = getParent(x);
 			left = (parent && parent->LEFT == x);
 			/*replace node with child (null or otherwise)*/
@@ -253,7 +253,7 @@ void removeRange(rangeTree *x)
 			tmp->addr = x->addr;
 			tmp->len = x->len;
 			left = (parent && parent->LEFT == x);
-			
+
 			/*replace node with child*/
 			if(parent)
 			{
@@ -268,7 +268,7 @@ void removeRange(rangeTree *x)
 			{
 				printf("Something went wrong");
 				return;
-			}		
+			}
 		}
 		/*If node deleted was red*/
 		if(!deletedColor)
@@ -357,8 +357,8 @@ static void rebalance(rangeTree *P, rangeTree *G, rangeTree *top, int newLeft, i
 				G->children[left] = NULL;
 				G->black=0;
 			}
-				
-				
+
+
 		}
 		/*else P is head pointer, so do nothing*/
 	}
@@ -379,7 +379,7 @@ int addRange(void* a, int length)
 	topLeft=2;
 	left=2;
 	newLeft=2;
-	
+
 	/*tree is empty*/
 	if(!head)
 	{
@@ -388,13 +388,13 @@ int addRange(void* a, int length)
 		{
 			printf("Failed to allocate memory for the dynamic memory range tree");
 			return -2;
-		}	
+		}
 		head->addr = address;
 		head->start = address;
 		head->len = length;
 		head->free = 0;
 		/*First node will be black */
-		head->black=1; 
+		head->black=1;
 		return 1;
 	}
 	while(1)
@@ -419,12 +419,12 @@ int addRange(void* a, int length)
 			{
 				tmp->len-= (int)((uintptr_t)length - tmp->start + address);
 				tmp->start = address + (uintptr_t)length;
-				
+
 				if(tmp->len <=0)
 				{
 					removeRange(tmp);
 					return addRange((void*) address, length);
-					
+
 				}
 				else
 				{
@@ -451,7 +451,7 @@ int addRange(void* a, int length)
 					x= 0;
 				}
 			}
-			
+
 		}
 		if(tmp->children[x])
 		{
@@ -468,7 +468,7 @@ int addRange(void* a, int length)
 			{
 				printf("Failed to allocate memory for the dynamic memory range tree");
 				return -2;
-			}		
+			}
 			tmp->children[x]->addr = address;
 			tmp->children[x]->start = address;
 			tmp->children[x]->len = length;
@@ -487,21 +487,22 @@ int rangeQuery(void* address, int length)
 {
 	rangeTree *x = getRangeNode((uintptr_t)address, length);
 	/*Add other cases, including whether or not it is freed*/
-	if(x && head->black==2)
-	{
-		head->black=1;
-		/*address + length -1 is out of range*/
-		return -2;
-	}
-	else if(!x)
-	{
-		/*not within range*/
-		return -1;
-	}
+
+    if(!x)
+    {
+        /* Not allocated */
+        return -1;
+    }
 	else if(x->free)
 	{
 		/*already freed*/
 		return -3;
+	}
+	else if(x && head->black==2)
+	{
+		head->black=1;
+		/*address + length -1 is out of range*/
+		return -2;
 	}
 	else
 	{
@@ -533,7 +534,7 @@ int freeRange(void* address)
 		{
 			return -3; //double free
 		}
-	
+
 	}
 	else
 	{
@@ -668,20 +669,20 @@ void printRangeTree()
 			{
 				break;
 			}
-			
+
 			t = nxtSize;
 			nxtSize = curSize;
 			curSize = t;
 			t = nxtIndex;
 			nxtIndex = curIndex;
 			curIndex = t;
-						
+
 			tmp = curLevelQ;
 			curLevelQ = nextLevelQ;
 			nextLevelQ = tmp;
 		}
-		
-		
+
+
 	}
 	//free(curLevelQ);
 	//free(nextLevelQ);
