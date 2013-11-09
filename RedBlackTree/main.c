@@ -19,24 +19,24 @@ int main(int argc, char **argv)
 	}
 	
 	printf("Free result: %d\n", freeRange((void*)(i/2*500)));
-	printRangeTree();
+	//printRangeTree();
 	addRange((void*)(i*500/2-25), 100); //Before to between
-	printRangeTree();
+	//printRangeTree();
 	addRange((void*)(i*500/2+125), 2); //After to Between
-	printRangeTree();
+	//printRangeTree();
 	printf("About to add %X,%X\n", i*500/2+128, i*500/2+128 + 500-1);
 	fflush(stdout);
 	addRange((void*)(i*500/2+128), 500); //after to after
-	printRangeTree();
+	//printRangeTree();
 	printf("About to add %X,%X\n", i*500/2, i*500/2 +4);
 	fflush(stdout);
 	addRange((void*)(i*500/2), 5); //should already exist
-	printRangeTree();
+	//printRangeTree();
 	printf("About to add %X,%X\n", 0x627, 0x627 +(0x658-0x627));
 	fflush(stdout);
 	addRange((void*)0x627, (0x658-0x627+1)); //should remove freed node
-	printRangeTree();
+	//printRangeTree();
 	
-	
+	deleteTree();
 	return 0;
 }
