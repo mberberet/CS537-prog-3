@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <stdio.h>
+#include <stdint.h>
 #include "rangeTree.h"
 
 #define RIGHT children[0]
@@ -7,197 +8,26 @@
 
 static rangeTree *head;
 
-
-static rangeTree* getParent(rangeTree *child)
+	
+static rangeTree *getRangeNode(uintptr_t address, int length)
 {
-	rangeTree *tmp;
-	tmp = head;
-	if(!child || head == child )
+	if(length<=0)
 	{
 		return NULL;
 	}
-	while(tmp && tmp->RIGHT != child && tmp->LEFT != child)
-	{
-		if(child->addr > tmp->addr + tmp->len -1)
-		{
-			/*Go right*/
-			tmp=tmp->RIGHT;
-		}
-		else if (child->addr + child->len-1 < tmp->addr)
-		{
-			/*Go left*/
-			tmp = tmp->LEFT;
-		}
-	}
-	return tmp;
-}
-
-static void rebalance(rangeTree *P, rangeTree *G, rangeTree *top, int newLeft, int left, int topLeft)
-{
-	if(!P->black && left<2)
-	{
-		/*P's sibling is red */
-		if(G->children[!left] && !G->children[!left]->black)
-		{
-			P->black=1;
-			G->black=0;
-			G->children[!left]->black=1;
-			if(topLeft<2)
-			{
-				top->children[topLeft] = G;
-				if(!top->black)
-				{
-					rangeTree *x = getParent(top);
-					rangeTree *y = getParent(x);
-					if(y)
-					{
-						left =(y->LEFT == x) ? 1 :0;
-					}
-					else
-					{
-						left = 2;
-					}
-					rebalance(top, x, y, topLeft, ((x->LEFT == top) ? 1 : 0), left);
-				}
-			}
-			else
-			{
-				head = G;
-				head->black=1;
-			}
-		}
-		/*P's sibling is black (or NULL) */
-		else if(!G->children[!left] || G->children[!left]->black)
-		{
-			if(newLeft == left)
-			{
-				G->children[left] = P->children[!left];
-				G->black=0;
-				P->children[!left] = G;
-				P->black=1;
-				if(topLeft<2)
-				{
-					top->children[topLeft] = P;
-				}
-				else
-				{
-					head = P;
-				}
-			}
-			else
-			{
-				P->children[!left]->children[left] = P;
-				P->children[!left]->children[!left] = G;
-				P->children[!left]->black=1;
-				if(topLeft<2)
-				{
-					top->children[topLeft] = P->children[!left];
-				}
-				else
-				{
-					head = P->children[!left];
-				}
-				P->children[!left] = NULL;
-				G->children[left] = NULL;
-				G->black=0;
-			}
-				
-				
-		}
-		/*else P is head pointer, so do nothing*/
-	}
-	/*else P is black, so do nothing*/
-}
-
-void addRange(int address, int length)
-{
-	/*Make copy of head pointer*/
-	rangeTree *top;
-	rangeTree *tmp;
-	rangeTree *tmpParent;
-	int topLeft;
-	int left;
-	int newLeft;
-	tmp=head;
-	topLeft=2;
-	left=2;
-	newLeft=2;
-	
-	/*tree is empty*/
-	if(!head)
-	{
-		head = (rangeTree *) malloc(sizeof(rangeTree));
-		if(!head)
-		{
-			printf("Failed to allocate memory for the dynamic memory range tree");
-			exit(1);
-		}	
-		head->addr = address;
-		head->len = length;
-		/*First node will be black */
-		head->black=1; 
-		return;
-	}
-	while(1)
-	{
-		int x;
-		if(address > tmp->addr + tmp->len -1)
-		{
-			x = 0;
-		}
-		else if (address + length-1 < tmp->addr)
-		{
-			x = 1;
-		}
-		else
-		{
-			printf("Address are ready allocated.");
-			exit(2);
-		}
-			/*Go right*/
-		if(tmp->children[x])
-		{
-			top = tmpParent;
-			tmpParent=tmp;
-			tmp = tmp->children[x];
-			topLeft=left;
-			left=x;
-			
-		}
-		else
-		{
-			tmp->children[x] = (rangeTree *) malloc(sizeof(rangeTree));
-			if(!tmp->children[x])
-			{
-				printf("Failed to allocate memory for the dynamic memory range tree");
-				exit(1);
-			}		
-			tmp->children[x]->addr = address;
-			tmp->children[x]->len = length;
-			tmp->children[x]->black=0;
-			newLeft=x;
-			break;
-		}
-	}
-	rebalance(tmp, tmpParent, top, newLeft, left, topLeft);
-
-}
-
-/*If range is covered in tree, return the node it is covered by. 
-  If range is partially covered, change head's color to double black
-  If range is not at all covered, return NULL
-*/
-static rangeTree* getRangeNode(int address, int length)
-{
 	rangeTree *tmp;
 	tmp = head;
 	while(tmp)
 	{
-		if(address > tmp->addr + tmp->len-1)
+		if(address == tmp->addr && address != tmp->start)
+		{
+			
+		}
+		if(address > tmp->start + tmp->len-1)
 		{
 			tmp= tmp->RIGHT;
 		}
-		else if (address + length-1 < tmp->addr)
+		else if (address + length-1 < tmp->start)
 		{
 			tmp = tmp->LEFT;
 		}
@@ -212,7 +42,7 @@ static rangeTree* getRangeNode(int address, int length)
 	}
 	else
 	{
-		if(address >= tmp->addr && address+length-1 <= tmp->addr + tmp->len-1) 
+		if(address >= tmp->start && address+length-1 <= tmp->start + tmp->len-1) 
 		{
 			return tmp;
 		}
@@ -225,18 +55,41 @@ static rangeTree* getRangeNode(int address, int length)
 	return head;
 }
 
-int rangeQuery(int address, int length)
+int isFreed(void* address)
 {
-	rangeTree *x = getRangeNode(address, length);
-	if(x && head->black==2)
+	rangeTree *x = getRangeNode((uintptr_t)address, 1);
+	if(x)
 	{
-		head->black=1;
-		return 2;
+		return x->free;
 	}
-	else 
+	else
 	{
-		return (x != NULL);
+		return -1;
 	}
+}
+
+static rangeTree* getParent(rangeTree *child)
+{
+	rangeTree *tmp;
+	tmp = head;
+	if(!child || head == child )
+	{
+		return NULL;
+	}
+	while(tmp && tmp->RIGHT != child && tmp->LEFT != child)
+	{
+		if(child->start > tmp->start + tmp->len -1)
+		{
+			/*Go right*/
+			tmp=tmp->RIGHT;
+		}
+		else if (child->start + child->len-1 < tmp->start)
+		{
+			/*Go left*/
+			tmp = tmp->LEFT;
+		}
+	}
+	return tmp;
 }
 
 static void fixDoubleBlack(int left, rangeTree* parent, rangeTree *root)
@@ -322,8 +175,8 @@ static void fixDoubleBlack(int left, rangeTree* parent, rangeTree *root)
 			/*black sibling with black children*/
 			else
 			{
-				parent->black++;
-				parent->children[!left]->black--;
+				(parent->black)++;
+				(parent->children[!left]->black)--;
 				if(parent->black==2)
 				{
 					rangeTree *y = getParent(parent);
@@ -346,49 +199,16 @@ static void fixDoubleBlack(int left, rangeTree* parent, rangeTree *root)
 	}
 }
 
-void removeRange(int address, int length)
+void removeRange(rangeTree *x)
 {
-	rangeTree* x;
 	rangeTree* tmp;
 	rangeTree* parent;
 	int left;
 	int deletedColor;
-	x = getRangeNode(address, length);
-	if(head->black==2)
-	{
-		head->black=1;
-		printf("Range is partially covered in the tree, don't remove"); 
-		return;
-	}
 	if(x)
-	{
-	/*reduce length*/
-		if(x->addr == address && length < x->len)
-		{
-			x->addr+=length;
-			x->len-= length;
-			return;
-		}
-		/*change start address*/
-		if(x->addr < address && address + length == x->addr + x->len)
-		{
-			x->addr=address;
-			x->len-=length;
-			return;
-		}
-		/*split into two nodes*/
-		if(x->addr < address && address + length != x->addr + x->len)
-		{
-			int tmp;
-			tmp = x->len;
-			x->len = address - x->addr;
-			addRange(address+length-1, tmp - x->len - length); 
-			return;
-		}
-	
+	{	
 		if(x->addr == head->addr && !x->LEFT && !x->RIGHT)
 		{
-			printf("Hello");
 			head = NULL;
 			free(head);
 			return;
@@ -405,6 +225,7 @@ void removeRange(int address, int length)
 				parent->children[left] = (x->LEFT) ? x->LEFT : x->RIGHT;
 				tmp = parent->children[left];
 				deletedColor = x->black;
+				x = NULL;
 				free(x);
 			}
 			/*At most two nodes in tree and removing head node*/
@@ -412,6 +233,7 @@ void removeRange(int address, int length)
 			{
 				head = (x->LEFT) ? x->LEFT : x->RIGHT;
 				head->black=1;
+				x = NULL;
 				free(x);
 				return;
 			}
@@ -426,6 +248,8 @@ void removeRange(int address, int length)
 				x = x->RIGHT;
 			}
 			parent = getParent(x);
+			tmp->start = x->start;
+			tmp->free = x->free;
 			tmp->addr = x->addr;
 			tmp->len = x->len;
 			left = (parent && parent->LEFT == x);
@@ -436,6 +260,7 @@ void removeRange(int address, int length)
 				parent->children[left] = (x->LEFT) ? x->LEFT : x->RIGHT;
 				tmp = parent->children[left];
 				deletedColor = x->black;
+				x= NULL;
 				free(x);
 			}
 			/*Should never happen*/
@@ -464,6 +289,258 @@ void removeRange(int address, int length)
 	}
 }
 
+static void rebalance(rangeTree *P, rangeTree *G, rangeTree *top, int newLeft, int left, int topLeft)
+{
+	if(!P->black && left<2)
+	{
+		/*P's sibling is red */
+		if(G->children[!left] && !G->children[!left]->black)
+		{
+			P->black=1;
+			G->black=0;
+			G->children[!left]->black=1;
+			if(topLeft<2)
+			{
+				if(!top->black)
+				{
+					rangeTree *x = getParent(top);
+					rangeTree *y = getParent(x);
+					if(y)
+					{
+						left =(y->LEFT == x) ? 1 :0;
+					}
+					else
+					{
+						left = 2;
+					}
+					rebalance(top, x, y, topLeft, ((x->LEFT == top) ? 1 : 0), left);
+				}
+			}
+			else
+			{
+				/*G is head*/
+				G->black=1;
+			}
+		}
+		/*P's sibling is black (or NULL) */
+		else if(!G->children[!left] || G->children[!left]->black)
+		{
+			if(newLeft == left)
+			{
+				G->children[left] = P->children[!left];
+				G->black=0;
+				P->children[!left] = G;
+				P->black=1;
+				if(topLeft<2)
+				{
+					top->children[topLeft] = P;
+				}
+				else
+				{
+					head = P;
+				}
+			}
+			else
+			{
+				P->children[!left]->children[left] = P;
+				P->children[!left]->children[!left] = G;
+				P->children[!left]->black=1;
+				if(topLeft<2)
+				{
+					top->children[topLeft] = P->children[!left];
+				}
+				else
+				{
+					head = P->children[!left];
+				}
+				P->children[!left] = NULL;
+				G->children[left] = NULL;
+				G->black=0;
+			}
+				
+				
+		}
+		/*else P is head pointer, so do nothing*/
+	}
+	/*else P is black, so do nothing*/
+}
+
+int addRange(void* a, int length)
+{
+	/*Make copy of head pointer*/
+	uintptr_t address = (uintptr_t) a;
+	rangeTree *top = NULL;
+	rangeTree *tmp = NULL;
+	rangeTree *tmpParent = NULL;
+	int topLeft;
+	int left;
+	int newLeft;
+	tmp=head;
+	topLeft=2;
+	left=2;
+	newLeft=2;
+	
+	/*tree is empty*/
+	if(!head)
+	{
+		head = (rangeTree *) malloc(sizeof(rangeTree));
+		if(!head)
+		{
+			printf("Failed to allocate memory for the dynamic memory range tree");
+			return -2;
+		}	
+		head->addr = address;
+		head->start = address;
+		head->len = length;
+		head->free = 0;
+		/*First node will be black */
+		head->black=1; 
+		return 1;
+	}
+	while(1)
+	{
+		int x;
+		if(address > tmp->start + (uintptr_t) tmp->len - 1)
+		{
+			x = 0;
+		}
+		else if (address + (uintptr_t)length-1 < tmp->start)
+		{
+			x = 1;
+		}
+		else if(!tmp->free)
+		{
+			printf("Address space are ready allocated.\n");
+			return -1;
+		}
+		else
+		{
+			if(address <= tmp->start)
+			{
+				tmp->len-= (int)((uintptr_t)length - tmp->start + address);
+				tmp->start = address + (uintptr_t)length;
+				
+				if(tmp->len <=0)
+				{
+					removeRange(tmp);
+					return addRange((void*) address, length);
+					
+				}
+				else
+				{
+					x=1;
+				}
+			}
+			else
+			{
+				if(address + (uintptr_t)length < tmp->start + (uintptr_t)tmp->len)
+				{
+					rangeTree *p;
+					int t = tmp->len;
+					tmp->len = (int)address - (int) tmp->start ;
+					printf("%X, %d\n", (address + (uintptr_t) length), (int)tmp->start + t - address - (int)length);
+					addRange( (void*)(address + (uintptr_t) length), (int)tmp->start + t - address - (int)length);// Check for off by one error
+					p = getRangeNode((uintptr_t) address + (uintptr_t) length, (int)tmp->start + t - ((int)address + length));
+					p->free = 1;
+					addRange((void*)address, length);
+					return;
+				}
+				else
+				{
+					tmp->len = (int)address - (int) tmp->start ;
+					x= 0;
+				}
+			}
+			
+		}
+		if(tmp->children[x])
+		{
+			top = tmpParent;
+			tmpParent=tmp;
+			tmp = tmp->children[x];
+			topLeft=left;
+			left=x;
+		}
+		else
+		{
+			tmp->children[x] = (rangeTree *) malloc(sizeof(rangeTree));
+			if(!tmp->children[x])
+			{
+				printf("Failed to allocate memory for the dynamic memory range tree");
+				return -2;
+			}		
+			tmp->children[x]->addr = address;
+			tmp->children[x]->start = address;
+			tmp->children[x]->len = length;
+			tmp->children[x]->black=0;
+			tmp->children[x]->free=0;
+			newLeft=x;
+			break;
+		}
+	}
+	rebalance(tmp, tmpParent, top, newLeft, left, topLeft);
+	return 1;
+}
+
+
+int rangeQuery(void* address, int length)
+{
+	rangeTree *x = getRangeNode((uintptr_t)address, length);
+	/*Add other cases, including whether or not it is freed*/
+	if(x && head->black==2)
+	{
+		head->black=1;
+		/*address + length -1 is out of range*/
+		return -2;
+	}
+	else if(!x)
+	{
+		/*not within range*/
+		return -1;
+	}
+	else if(x->free)
+	{
+		/*already freed*/
+		return -3;
+	}
+	else
+	{
+		return 1;
+	}
+}
+
+
+
+int freeRange(void* address)
+{
+	rangeTree *x = getRangeNode((uintptr_t) address, 1);
+	if(x)
+	{
+		if(x->addr == (uintptr_t) address && !x->free)
+		{
+			x->free = 1;
+			return x->free;
+		}
+		if(x->addr != (uintptr_t) address && x->free)
+		{
+			return -4;//double free or misaligned address
+		}
+		if(x->addr != (uintptr_t) address)
+		{
+			return -2; //misaligned address
+		}
+		else
+		{
+			return -3; //double free
+		}
+	
+	}
+	else
+	{
+		return -1;//doesn't exist
+	}
+}
+
 static int dynamicMemoryBytesNode(rangeTree* x)
 {
 	if(!x)
@@ -472,7 +549,7 @@ static int dynamicMemoryBytesNode(rangeTree* x)
 	}
 	else
 	{
-		return dynamicMemoryBytesNode(x->LEFT) + dynamicMemoryBytesNode(x->RIGHT) + x->len;
+		return dynamicMemoryBytesNode(x->LEFT) + dynamicMemoryBytesNode(x->RIGHT) + (x->free ? 0 : x->len);
 	}
 }
 
@@ -517,7 +594,7 @@ void printRangeTree()
 		curIndex--;
 		if(n)
 		{
-			printf("%X,%d,%d ", n->addr, n->len, n->black);
+			printf("%X,%X,%d,%d ", n->start, n->start+n->len-1, n->black, n->free);
 			nextLevelQ[nxtIndex] = n->LEFT;
 			nxtIndex++;
 			if(nxtIndex==nxtSize)
@@ -560,6 +637,7 @@ void printRangeTree()
 			}
 			nextLevelQ[nxtIndex] = NULL;
 			nxtIndex++;
+			//printf("%d\n", nxtIndex);
 			if(nxtIndex==nxtSize)
 			{
 				nxtSize*=2;
@@ -605,7 +683,7 @@ void printRangeTree()
 		
 		
 	}
-	free(curLevelQ);
-	free(nextLevelQ);
+	//free(curLevelQ);
+	//free(nextLevelQ);
 	printf("\n");
 }
