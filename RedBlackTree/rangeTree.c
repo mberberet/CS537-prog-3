@@ -591,6 +591,7 @@ void printRangeTree()
 		{
 			curLevelQ[i-1] = curLevelQ[i];
 		}
+		i=0;
 		curIndex--;
 		if(n)
 		{
@@ -622,7 +623,6 @@ void printRangeTree()
 		}
 		else
 		{
-			printf("X");
 			nextLevelQ[nxtIndex] = NULL;
 			nxtIndex++;
 			if(nxtIndex==nxtSize)
@@ -635,9 +635,9 @@ void printRangeTree()
 					exit(1);
 				}
 			}
+			fflush(stdout);
 			nextLevelQ[nxtIndex] = NULL;
 			nxtIndex++;
-			//printf("%d\n", nxtIndex);
 			if(nxtIndex==nxtSize)
 			{
 				nxtSize*=2;
@@ -656,7 +656,7 @@ void printRangeTree()
 			rangeTree **tmp;
 			printf("\n");
 			x=0;
-			for(i=0; i<=nxtIndex; i++)
+			for(i=0; i<nxtIndex; i++)
 			{
 				if(nextLevelQ[i] != NULL)
 				{
@@ -672,10 +672,9 @@ void printRangeTree()
 			t = nxtSize;
 			nxtSize = curSize;
 			curSize = t;
-			t = nxtIndex;
-			nxtIndex = curIndex;
-			curIndex = t;
-						
+			curIndex = nxtIndex;
+			nxtIndex = 0;
+				
 			tmp = curLevelQ;
 			curLevelQ = nextLevelQ;
 			nextLevelQ = tmp;
@@ -685,5 +684,41 @@ void printRangeTree()
 	}
 	//free(curLevelQ);
 	//free(nextLevelQ);
+	fflush(stdout);
 	printf("\n");
 }
+	void deleteSubTree(rangeTree *x)
+	{
+		rangeTree *l;
+		rangeTree *r;
+		if(x)
+		{
+			r = x->LEFT;
+			l = x->RIGHT;
+			free(x);
+			deleteSubTree(l);
+			deleteSubTree(r);
+		}
+		else
+		{
+			return;
+		}
+	}
+	void deleteTree()
+	{
+		rangeTree *l;
+		rangeTree *r;
+		if(head)
+		{
+			r = head->LEFT;
+			l = head->RIGHT;
+			free(head);
+			deleteSubTree(l);
+			deleteSubTree(r);
+		}
+		else
+		{
+			return;
+		}
+	}
+	

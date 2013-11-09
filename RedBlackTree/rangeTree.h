@@ -38,6 +38,7 @@ int freeRange(void* address);
 /*index off start*/
 int isFreed(void* address);
 void printLinear();
+void deleteTree();
 /*Gives total amount of dynamic memory allocated*/
 int dynamicMemoryBytes();
 void printRangeTree();
