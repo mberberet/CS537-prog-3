@@ -2,7 +2,6 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include "537malloc.h"
-#include "rangeTree.h"
 
 #define RIGHT children[0]
 #define LEFT children[1]
@@ -65,7 +64,7 @@ void *realloc537(void *ptr, size_t size) {
         return malloc537(size);
     }
     if (rangeQuery(ptr, 1) == 1) {
-        free537(ptr);
+        freeRange(ptr);
         printf("Existed. Freed.\n");
     }
     if ((address = realloc(ptr, size)) == NULL && size > 0) {
