@@ -1,35 +1,48 @@
-#include "malloc537.h"
-#include "realloc537.h"
-#include "free537.h"
-#include "testcheck537.h"
-#include <string.h>
+/*This is just to test the red-black tree*/
+
+#include <stdlib.h>
 #include <stdio.h>
+#include <stdint.h>
 #include "rangeTree.h"
 
-int main() {
-    char *array = NULL;
-    array = malloc537(10);
-//    free537(array);
-    memcheck537(array, 100);
-    if (rangeQuery(array, 2) == 1) {
-        printf("Found it!\n");
-    } else {
-        printf("Not Found\n");
-    }
-//    free537(array);
-//    char *array = NULL;
-/*    array = realloc537(array, 20);
-    if (rangeQuery(array, 1) == 1) {
-        printf("Found again!\n");
-    } else {
-        printf("Not Found again\n");
-    }
-//    free537(array);*/
-
-/*    char *buff = malloc537(8);
-    testcheck537(buff, 5);
-    // This is never happening.
-    testcheck537(buff, 12);
-    return 0;*/
-    return 0;
+int main(int argc, char **argv)
+{
+	uintptr_t i;
+	uintptr_t x;
+	i=0;
+	while(i<atoi(argv[1]))
+	{
+		x=i*500;
+		addRange((void*)x, 400);
+		i++;
+	}
+	
+	printf("Free result: %d\n", freeRange((void*)(i/2*500)));
+	/*printRangeTree();*/
+	printf("About to add %X,%X\n", i*500/2-25, i*500/2-25+100-1);
+	addRange((void*)(i*500/2-25), 100); 
+	/*Before to between
+	printRangeTree();*/
+	printf("About to add %X,%X\n", i*500/2+125, i*500/2+125+1);
+	addRange((void*)(i*500/2+125), 2); 
+	/*After to Between
+	printRangeTree();*/
+	printf("About to add %X,%X\n", i*500/2+128, i*500/2+128 + 500-1);
+	fflush(stdout);
+	addRange((void*)(i*500/2+128), 500); 
+	/*after to after
+	printRangeTree();*/
+	printf("About to add %X,%X\n", i*500/2, i*500/2 +4);
+	fflush(stdout);
+	addRange((void*)(i*500/2), 5); 
+	/*should already exist
+	printRangeTree();*/
+	printf("About to add %X,%X\n", 0x627, 0x627 +(0x658-0x627));
+	fflush(stdout);
+	addRange((void*)0x627, (0x658-0x627+1)); 
+	/*should remove freed node*/
+	printRangeTree();
+	
+	deleteTree();
+	return 0;
 }

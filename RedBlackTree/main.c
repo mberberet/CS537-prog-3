@@ -18,15 +18,15 @@ int main(int argc, char **argv)
 	}
 	
 	printf("Free result: %d\n", freeRange((void*)(i/2*500)));
-	/*printRangeTree();*/
+	printRangeTree();
 	printf("About to add %X,%X\n", i*500/2-25, i*500/2-25+100-1);
 	addRange((void*)(i*500/2-25), 100); 
 	/*Before to between
 	printRangeTree();*/
 	printf("About to add %X,%X\n", i*500/2+125, i*500/2+125+1);
 	addRange((void*)(i*500/2+125), 2); 
-	/*After to Between
-	printRangeTree();*/
+	/*After to Between*/
+	//printRangeTree();
 	printf("About to add %X,%X\n", i*500/2+128, i*500/2+128 + 500-1);
 	fflush(stdout);
 	addRange((void*)(i*500/2+128), 500); 
