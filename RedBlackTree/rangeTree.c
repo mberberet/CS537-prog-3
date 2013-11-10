@@ -11,11 +11,12 @@ static rangeTree *head;
 	
 static rangeTree *getRangeNode(uintptr_t address, int length)
 {
+	rangeTree *tmp;
 	if(length<=0)
 	{
 		return NULL;
 	}
-	rangeTree *tmp;
+
 	tmp = head;
 	while(tmp)
 	{
@@ -438,12 +439,11 @@ int addRange(void* a, int length)
 					rangeTree *p;
 					int t = tmp->len;
 					tmp->len = (int)address - (int) tmp->start ;
-					printf("%X, %d\n", (address + (uintptr_t) length), (int)tmp->start + t - address - (int)length);
-					addRange( (void*)(address + (uintptr_t) length), (int)tmp->start + t - address - (int)length);// Check for off by one error
+					addRange( (void*)(address + (uintptr_t) length), (int)tmp->start + t - address - (int)length);
 					p = getRangeNode((uintptr_t) address + (uintptr_t) length, (int)tmp->start + t - ((int)address + length));
 					p->free = 1;
-					addRange((void*)address, length);
-					return;
+					return addRange((void*)address, length);
+					
 				}
 				else
 				{
@@ -684,7 +684,6 @@ void printRangeTree()
 	}
 	//free(curLevelQ);
 	//free(nextLevelQ);
-	fflush(stdout);
 	printf("\n");
 }
 	void deleteSubTree(rangeTree *x)

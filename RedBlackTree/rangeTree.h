@@ -2,8 +2,10 @@
 
 typedef struct rangeTree
 {
-	uintptr_t addr;//original starting point of the block
-	uintptr_t start;//current starting point of block
+	/*original starting point of the block*/
+	uintptr_t addr;
+	/*current starting point of block*/
+	uintptr_t start;
 	int len;
 	/*children[0] is right, children[1] is left */
 	struct rangeTree *children[2];
@@ -31,9 +33,6 @@ Error cases
 */
 /*index off address, must not be freed*/
 int freeRange(void* address);
-/*index off start*/
-//void removeRange(void* start);
-//This is now static 
 
 /*index off start*/
 int isFreed(void* address);
