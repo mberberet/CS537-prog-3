@@ -102,7 +102,7 @@ static void fixDoubleBlack(int left, rangeTree* parent, rangeTree *root)
 		{
 			if(topLeft<2)
 			{
-				root->children[topLeft] = parent->RIGHT;
+				root->children[topLeft] = parent->children[!left];
 				parent->children[!left] = parent->children[!left]->children[left];
 				root->children[topLeft]->children[left] = parent;
 				parent->black=0;
@@ -120,10 +120,13 @@ static void fixDoubleBlack(int left, rangeTree* parent, rangeTree *root)
 				fixDoubleBlack(left, parent, head);
 			}
 		}
+		else if(!parent->children[!left])
+		{
+		}
 		else
 		{
 			/*black sibling with red child on same side*/			
-			if(parent->children[!left]->children[left] && !parent->children[!left]->children[left]->black)
+			if(parent->children[!left]->children[!left] && !parent->children[!left]->children[!left]->black)
 			{
 				if(topLeft<2)
 				{
@@ -200,6 +203,7 @@ static void fixDoubleBlack(int left, rangeTree* parent, rangeTree *root)
 	}
 }
 
+
 void removeRange(rangeTree *x)
 {
 	
@@ -235,6 +239,7 @@ void removeRange(rangeTree *x)
 			{
 				head = (x->LEFT) ? x->LEFT : x->RIGHT;
 				head->black=1;
+				printf("Deleting node: %d\n", x->start);
 				free(x);
 				x = NULL;
 				return;
@@ -262,6 +267,7 @@ void removeRange(rangeTree *x)
 				parent->children[left] = (x->LEFT) ? x->LEFT : x->RIGHT;
 				tmp = parent->children[left];
 				deletedColor = x->black;
+				printf("Deleting node: %d\n", x->start);
 				free(x);
 				x=NULL;
 			}
@@ -277,7 +283,7 @@ void removeRange(rangeTree *x)
 		{
 			/*color black*/
 			if(tmp)
-				tmp->black=1;
+			tmp->black = 1;
 		}
 		else
 		{
@@ -383,7 +389,7 @@ int addRange(void* a, int length)
 	newLeft=2;
 	
 	/*tree is empty*/
-	if(!head)
+	if(!head )
 	{
 		head = (rangeTree *) malloc(sizeof(rangeTree));
 		if(!head)
@@ -396,7 +402,9 @@ int addRange(void* a, int length)
 		head->len = length;
 		head->free = 0;
 		/*First node will be black */
-		head->black=1; 
+		head->black=1;
+		head->LEFT = NULL;
+		head->RIGHT = NULL;
 		return 1;
 	}
 	while(1)
@@ -472,6 +480,8 @@ int addRange(void* a, int length)
 			tmp->children[x]->len = length;
 			tmp->children[x]->black=0;
 			tmp->children[x]->free=0;
+			tmp->children[x]->LEFT = NULL;
+			tmp->children[x]->RIGHT = NULL;
 			newLeft=x;
 			break;
 		}
@@ -684,6 +694,7 @@ void printRangeTree()
 	free(curLevelQ);
 	free(nextLevelQ);
 	printf("\n");
+
 }
 	void deleteSubTree(rangeTree *x)
 	{
@@ -694,6 +705,7 @@ void printRangeTree()
 			r = x->LEFT;
 			l = x->RIGHT;
 			free(x);
+			x=NULL;
 			deleteSubTree(l);
 			deleteSubTree(r);
 		}
@@ -711,6 +723,7 @@ void printRangeTree()
 			r = head->LEFT;
 			l = head->RIGHT;
 			free(head);
+			head = NULL;
 			deleteSubTree(l);
 			deleteSubTree(r);
 		}
