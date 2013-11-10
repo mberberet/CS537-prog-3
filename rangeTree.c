@@ -202,6 +202,7 @@ static void fixDoubleBlack(int left, rangeTree* parent, rangeTree *root)
 
 void removeRange(rangeTree *x)
 {
+	
 	rangeTree* tmp;
 	rangeTree* parent;
 	int left;
@@ -210,8 +211,8 @@ void removeRange(rangeTree *x)
 	{	
 		if(x->addr == head->addr && !x->LEFT && !x->RIGHT)
 		{
-			head = NULL;
 			free(head);
+			head = NULL;
 			return;
 		}
 		/*remove node and follow red black tree algorithm*/
@@ -226,16 +227,16 @@ void removeRange(rangeTree *x)
 				parent->children[left] = (x->LEFT) ? x->LEFT : x->RIGHT;
 				tmp = parent->children[left];
 				deletedColor = x->black;
-				x = NULL;
 				free(x);
+				x = NULL;
 			}
 			/*At most two nodes in tree and removing head node*/
 			else
 			{
 				head = (x->LEFT) ? x->LEFT : x->RIGHT;
 				head->black=1;
-				x = NULL;
 				free(x);
+				x = NULL;
 				return;
 			}
 		}
@@ -261,8 +262,8 @@ void removeRange(rangeTree *x)
 				parent->children[left] = (x->LEFT) ? x->LEFT : x->RIGHT;
 				tmp = parent->children[left];
 				deletedColor = x->black;
-				x= NULL;
 				free(x);
+				x=NULL;
 			}
 			/*Should never happen*/
 			else
@@ -439,10 +440,7 @@ int addRange(void* a, int length)
 					rangeTree *p;
 					int t = tmp->len;
 					tmp->len = (int)address - (int) tmp->start ;
-					addRange( (void*)(address + (uintptr_t) length), (int)tmp->start + t - address - (int)length);
-					p = getRangeNode((uintptr_t) address + (uintptr_t) length, (int)tmp->start + t - ((int)address + length));
-					p->free = 1;
-					return addRange((void*)address, length);
+					x=0;
 					
 				}
 				else
@@ -595,7 +593,7 @@ void printRangeTree()
 		curIndex--;
 		if(n)
 		{
-			printf("%X,%X,%d,%d ", n->start, n->start+n->len-1, n->black, n->free);
+			printf("%d,%d,%d,%d ", n->start, n->start+n->len-1, n->black, n->free);
 			nextLevelQ[nxtIndex] = n->LEFT;
 			nxtIndex++;
 			if(nxtIndex==nxtSize)
@@ -623,6 +621,7 @@ void printRangeTree()
 		}
 		else
 		{
+			printf("X");
 			nextLevelQ[nxtIndex] = NULL;
 			nxtIndex++;
 			if(nxtIndex==nxtSize)
@@ -682,8 +681,8 @@ void printRangeTree()
 		
 		
 	}
-	//free(curLevelQ);
-	//free(nextLevelQ);
+	free(curLevelQ);
+	free(nextLevelQ);
 	printf("\n");
 }
 	void deleteSubTree(rangeTree *x)
