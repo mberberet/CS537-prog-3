@@ -102,7 +102,8 @@ static void fixDoubleBlack(int left, rangeTree* parent, rangeTree *root)
 		{
 			if(topLeft<2)
 			{
-				root->children[topLeft] = parent->RIGHT;
+				parent->children[!left]->black = parent->black;
+				root->children[topLeft] = parent->children[!left];
 				parent->children[!left] = parent->children[!left]->children[left];
 				root->children[topLeft]->children[left] = parent;
 				parent->black=0;
@@ -112,6 +113,7 @@ static void fixDoubleBlack(int left, rangeTree* parent, rangeTree *root)
 			}
 			else
 			{
+				parent->children[!left]->black = parent->black;
 				head = parent->children[!left];
 				parent->children[!left] = parent->children[!left]->children[left];
 				head->children[left] = parent;
@@ -120,13 +122,18 @@ static void fixDoubleBlack(int left, rangeTree* parent, rangeTree *root)
 				fixDoubleBlack(left, parent, head);
 			}
 		}
+		else if(!parent->children[!left])
+		{
+		}
 		else
 		{
 			/*black sibling with red child on same side*/			
-			if(parent->children[!left]->children[left] && !parent->children[!left]->children[left]->black)
+			if(parent->children[!left]->children[!left] && !parent->children[!left]->children[!left]->black)
 			{
 				if(topLeft<2)
-				{
+				{ 	
+					parent->children[!left]->black = parent->black;
+					parent->black = 1;
 					root->children[topLeft] = parent->children[!left];
 					parent->children[!left] = root->children[topLeft]->children[left];
 					root->children[topLeft]->children[left] = parent;
@@ -137,6 +144,8 @@ static void fixDoubleBlack(int left, rangeTree* parent, rangeTree *root)
 				}
 				else
 				{
+					parent->children[!left]->black = parent->black;
+					parent->black = 1;
 					head = parent->children[!left];
 					parent->children[!left] = head->children[left];
 					head->children[left] = parent;
@@ -151,6 +160,8 @@ static void fixDoubleBlack(int left, rangeTree* parent, rangeTree *root)
 			{
 				if(topLeft<2)
 				{
+					parent->children[!left]->black = parent->black;
+					parent->black = 1;
 					root->children[topLeft] = parent->children[!left]->children[left];
 					parent->children[!left]->children[left] = root->children[topLeft]->children[!left];
 					root->children[topLeft]->children[!left] = parent->children[!left];
@@ -163,6 +174,8 @@ static void fixDoubleBlack(int left, rangeTree* parent, rangeTree *root)
 				}
 				else
 				{
+					parent->children[!left]->black = parent->black;
+					parent->black = 1;
 					head = parent->children[!left]->children[left];
 					parent->children[!left]->children[left] = head->children[!left];
 					head->children[!left] = parent->children[!left];
@@ -199,6 +212,7 @@ static void fixDoubleBlack(int left, rangeTree* parent, rangeTree *root)
 		exit(2);
 	}
 }
+
 
 void removeRange(rangeTree *x)
 {
@@ -277,7 +291,7 @@ void removeRange(rangeTree *x)
 		{
 			/*color black*/
 			if(tmp)
-				tmp->black=1;
+			tmp->black = 1;
 		}
 		else
 		{
@@ -293,6 +307,7 @@ void removeRange(rangeTree *x)
 
 static void rebalance(rangeTree *P, rangeTree *G, rangeTree *top, int newLeft, int left, int topLeft)
 {
+	/*P is red*/
 	if(!P->black && left<2)
 	{
 		/*P's sibling is red */
@@ -329,38 +344,46 @@ static void rebalance(rangeTree *P, rangeTree *G, rangeTree *top, int newLeft, i
 		{
 			if(newLeft == left)
 			{
-				G->children[left] = P->children[!left];
-				G->black=0;
-				P->children[!left] = G;
-				P->black=1;
 				if(topLeft<2)
 				{
 					top->children[topLeft] = P;
+					P->black = 1;
+					G->black = 0;
+					G->children[left] = P->children[!left];
+					P->children[!left] = G;
 				}
 				else
 				{
 					head = P;
+					head->black = 1;
+					G->black = 0;
+					G->children[left] = P->children[!left];
+					P->children[!left] = G;
 				}
 			}
 			else
 			{
-				P->children[!left]->children[left] = P;
-				P->children[!left]->children[!left] = G;
-				P->children[!left]->black=1;
 				if(topLeft<2)
 				{
-					top->children[topLeft] = P->children[!left];
+					top->children[topLeft] = P->children[newLeft];
+					G->children[left] = P->children[newLeft]->children[newLeft];
+					P->children[newLeft] = P->children[newLeft]->children[!newLeft];
+					top->children[topLeft]->children[left] = P;
+					top->children[topLeft]->children[!left] = G;
+					G->black = 0;
+					top->children[topLeft]->black = 1;
 				}
 				else
 				{
-					head = P->children[!left];
+					head = P->children[newLeft];
+					G->children[left] = P->children[newLeft]->children[newLeft];
+					P->children[newLeft] = P->children[newLeft]->children[!newLeft];
+					head->children[left] = P;
+					head->children[!left] = G;
+					G->black = 0;
+					head->black = 1;
 				}
-				P->children[!left] = NULL;
-				G->children[left] = NULL;
-				G->black=0;
 			}
-				
-				
 		}
 		/*else P is head pointer, so do nothing*/
 	}
@@ -383,7 +406,7 @@ int addRange(void* a, int length)
 	newLeft=2;
 	
 	/*tree is empty*/
-	if(!head)
+	if(!head )
 	{
 		head = (rangeTree *) malloc(sizeof(rangeTree));
 		if(!head)
@@ -396,7 +419,9 @@ int addRange(void* a, int length)
 		head->len = length;
 		head->free = 0;
 		/*First node will be black */
-		head->black=1; 
+		head->black=1;
+		head->LEFT = NULL;
+		head->RIGHT = NULL;
 		return 1;
 	}
 	while(1)
@@ -426,7 +451,6 @@ int addRange(void* a, int length)
 				{
 					removeRange(tmp);
 					return addRange((void*) address, length);
-					
 				}
 				else
 				{
@@ -472,6 +496,8 @@ int addRange(void* a, int length)
 			tmp->children[x]->len = length;
 			tmp->children[x]->black=0;
 			tmp->children[x]->free=0;
+			tmp->children[x]->LEFT = NULL;
+			tmp->children[x]->RIGHT = NULL;
 			newLeft=x;
 			break;
 		}
@@ -594,6 +620,7 @@ void printRangeTree()
 		if(n)
 		{
 			printf("%d,%d,%d,%d ", n->start, n->start+n->len-1, n->black, n->free);
+			/*printf("%d,%d ", n->black, n->free);*/
 			nextLevelQ[nxtIndex] = n->LEFT;
 			nxtIndex++;
 			if(nxtIndex==nxtSize)
@@ -681,9 +708,18 @@ void printRangeTree()
 		
 		
 	}
+	for(curIndex=0; curIndex<curSize; curIndex++)
+	{
+		curLevelQ[curIndex]=NULL;
+	}
+		for(nxtIndex=0; nxtIndex<nxtSize; nxtIndex++)
+	{
+		nextLevelQ[nxtIndex]=NULL;
+	}
 	free(curLevelQ);
 	free(nextLevelQ);
 	printf("\n");
+
 }
 	void deleteSubTree(rangeTree *x)
 	{
@@ -694,6 +730,7 @@ void printRangeTree()
 			r = x->LEFT;
 			l = x->RIGHT;
 			free(x);
+			x=NULL;
 			deleteSubTree(l);
 			deleteSubTree(r);
 		}
@@ -711,6 +748,7 @@ void printRangeTree()
 			r = head->LEFT;
 			l = head->RIGHT;
 			free(head);
+			head = NULL;
 			deleteSubTree(l);
 			deleteSubTree(r);
 		}
